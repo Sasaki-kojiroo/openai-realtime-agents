@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}System · Flask Realtime Chat{% endblock %}
+
+{% block content %}
+<section class="page">
+  <header class="page-header">
+    <h1>System</h1>
+    <p class="muted">Configura la personalidad (prompt del sistema) y el modelo usado por el chatbot.</p>
+  </header>
+
+  <form class="card" method="POST" action="{{ url_for('system_post') }}">
+    <div class="field">
+      <label for="system_prompt">System Prompt</label>
+      
+      <textarea id="system_prompt" name="system_prompt" rows="8" required>{{ settings.system_prompt }}</textarea>
+      
+      <div id="preview" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #667eea; display: none;">
+        <strong style="color: #667eea;">Vista previa:</strong>
+        <div id="preview-text" style="margin-top: 5px; white-space: pre-wrap; font-family: monospace; font-size: 0.9em;"></div>
+      </div>
+      
+      <small class="muted">
+        Este texto se enviará como mensaje de rol "system".<br>
+        💡 <strong>Tip:</strong> Escribe <code style="background: #ffe6e6; padding: 2px 4px; border-radius: 3px;">{{now}}</code> en cualquier parte del prompt para insertar la fecha actual.<br>
+        <em>La vista previa arriba muestra cómo se verá el texto final.</em>
+      </small>
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="model">Modelo</label>
+        <input id="model" name="model" type="text" value="{{ settings.model }}" required />
+        <small class="muted">Ej: gpt-4o-mini, gpt-4o, o1-mini, etc.</small>
+      </div>
+
+      <div class="field">
+        <label for="temperature">Temperature</label>
+        <input id="temperature" name="temperature" type="number" min="0" max="2" step="0.1" value="{{ settings.temperature }}" />
+        <small class="muted">Controla la creatividad de las respuestas.</small>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="realtime_model">Realtime Model</label>
+        <input id="realtime_model" name="realtime_model" type="text" value="{{ settings.realtime_model }}" required />
+        <small class="muted">Ej: gpt-4o-realtime-preview-2025-06-03</small>
+      </div>
+
+      <div class="field">
+        <label for="voice">Voice</label>
+        <input id="voice" name="voice" type="text" value="{{ settings.voice }}" />
+        <small class="muted">Ej: verse, alloy, cobalt…</small>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" type="submit">Guardar</button>
+      <a class="btn" href="{{ url_for('chatbot') }}">Ir a Chatbot</a>
+    </div>
+  </form>
+</section>
+
+<style>
+.draggable-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 6px;
+  cursor: move;
+  user-select: none;
+  font-size: 0.9em;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.draggable-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.draggable-tag:active {
+  transform: scale(0.95);
+}
+
+#system_prompt.drag-over {
+  border: 2px dashed #667eea;
+  background-color: rgba(102, 126, 234, 0.05);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('system_prompt');
+  const preview = document.getElementById('preview');
+  const previewText = document.getElementById('preview-text');
+  
+  // Función para obtener la fecha y hora actual en español
+  function getCurrentDate() {
+    const now = new Date();
+    const dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", 
+                   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+    
+    const diaSemana = dias[now.getDay()];
+    const dia = now.getDate();
+    const mes = meses[now.getMonth()];
+    const año = now.getFullYear();
+    
+    // Formatear la hora en formato 12h con AM/PM
+    const horaFormateada = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    
+    return `${diaSemana}, ${dia} de ${mes} del ${año} ${horaFormateada}`;
+  }
+  
+  // Función para actualizar la vista previa
+  function updatePreview() {
+    const text = textarea.value;
+    
+    // Verificar si contiene {{now}}
+    if (text.includes('{{now}}')) {
+      const currentDate = getCurrentDate();
+      const previewContent = text.replace(/\{\{now\}\}/g, 
+        `<span style="background: #e6f3ff; padding: 2px 4px; border-radius: 3px; color: #0066cc; font-weight: bold;">${currentDate}</span>`
+      );
+      
+      previewText.innerHTML = previewContent;
+      preview.style.display = 'block';
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+  
+  // Actualizar vista previa cuando el usuario escribe
+  textarea.addEventListener('input', updatePreview);
+  
+  // Actualizar vista previa inicial
+  updatePreview();
+});
+</script>
+{% endblock %}

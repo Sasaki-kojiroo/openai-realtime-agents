@@ -1,0 +1,1178 @@
+{% extends "base.html" %}
+{% block title %}Herramientas · Flask Realtime Chat{% endblock %}
+
+{% block content %}
+<script src="{{ url_for('static', filename='js/tools-helper.js') }}"></script>
+<section class="page">
+  <header class="page-header">
+    <h1>🛠️ Herramientas del AI</h1>
+    <p class="muted">Configura qué puede hacer el AI. Es muy fácil, solo sigue los pasos.</p>
+  </header>
+
+  <!-- Herramientas del Sistema -->
+  {% if system_tools %}
+  <div class="card system-tools-card" style="margin-bottom: 24px;">
+    <div class="system-tools-header">
+      <div>
+        <h2 style="margin-top: 0;">⚙️ Herramientas del Sistema ({{ system_tools|length }})</h2>
+        <p class="muted" style="margin: 8px 0 0 0;">Herramientas especiales predefinidas. Solo puedes editar el nombre y descripción.</p>
+      </div>
+      <a href="{{ url_for('static', filename='../SYSTEM_TOOLS_README.md') }}" target="_blank" class="btn-mini" style="background: #3b82f6; color: white;">
+        📖 Ver Documentación
+      </a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+      {% for tool in system_tools %}
+      <div class="tool-item system-tool-item">
+        <div class="tool-main">
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <span class="system-badge">SISTEMA</span>
+              <strong class="tool-name">{{ tool.name }}</strong>
+              <span class="tool-status {% if tool.enabled %}enabled{% else %}disabled{% endif %}">
+                {{ 'Activa ✓' if tool.enabled else 'Inactiva ✗' }}
+              </span>
+            </div>
+            <p class="tool-desc">{{ tool.description }}</p>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <code class="tool-tag">Tipo: {{ tool.type }}</code>
+              <code class="tool-tag">ID: {{ tool.id }}</code>
+            </div>
+          </div>
+          <div class="tool-btns">
+            <button class="btn-mini btn-info" onclick="editSystemTool('{{ tool.id }}', '{{ tool.name }}', `{{ tool.description }}`)">
+              ✏️ Editar
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Herramientas Personalizadas -->
+  {% if tools %}
+  <div class="card" style="margin-bottom: 24px;">
+    <h2 style="margin-top: 0;">🔧 Herramientas Personalizadas ({{ tools|length }})</h2>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      {% for tool in tools %}
+      <div class="tool-item">
+        <div class="tool-main">
+          <div>
+            <strong class="tool-name">{{ tool.name }}</strong>
+            <span class="tool-status {% if tool.enabled %}enabled{% else %}disabled{% endif %}">
+              {{ 'Activa ✓' if tool.enabled else 'Inactiva ✗' }}
+            </span>
+            <p class="tool-desc">{{ tool.description }}</p>
+            <code class="tool-url">{{ tool.endpoint.method }} {{ tool.endpoint.url }}</code>
+          </div>
+          <div class="tool-btns">
+            <button class="btn-mini btn-info" onclick="editCustomTool('{{ tool.id }}')">
+              ✏️ Editar
+            </button>
+            <form method="POST" action="{{ url_for('tools_toggle', tool_id=tool.id) }}" style="display: inline;">
+              <button type="submit" class="btn-mini {% if tool.enabled %}btn-warning{% else %}btn-success{% endif %}">
+                {{ '⏸ Desactivar' if tool.enabled else '▶ Activar' }}
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('tools_delete', tool_id=tool.id) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar esta herramienta?');">
+              <button type="submit" class="btn-mini btn-danger">🗑 Eliminar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Wizard de Configuración -->
+  <div class="wizard-container">
+    <!-- Paso 1: Importar cURL -->
+    <div class="wizard-step active" id="step1">
+      <div class="step-header">
+        <span class="step-number">1</span>
+        <h2>Pega tu comando cURL</h2>
+      </div>
+      <div class="step-content">
+        <p class="step-help">
+          📋 <strong>¿Dónde conseguir el cURL?</strong><br>
+          • Desde Postman: Botón "Code" → cURL<br>
+          • Desde tu navegador: F12 → Network → Click derecho → "Copy as cURL"<br>
+          • Desde documentación de tu API
+        </p>
+        
+        <textarea id="curlInput" class="curl-textarea" placeholder="Pega aquí tu comando cURL completo, por ejemplo:
+
+curl -X POST https://api.ejemplo.com/clientes \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer tu_token' \
+  -d '{&quot;nombre&quot;: &quot;Juan&quot;, &quot;email&quot;: &quot;juan@ejemplo.com&quot;}'"></textarea>
+        
+        <div class="step-actions">
+          <button class="btn primary btn-large" onclick="importCurl()">
+            ➡️ Siguiente: Importar cURL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2: Revisar y Ajustar -->
+    <div class="wizard-step" id="step2" style="display: none;">
+      <div class="step-header">
+        <span class="step-number">2</span>
+        <h2>Revisa la configuración</h2>
+      </div>
+      <div class="step-content">
+        <p class="step-help">
+          ✏️ <strong>Ajusta solo lo necesario.</strong> Ya importamos todo del cURL.
+        </p>
+
+        <form id="toolForm">
+          <!-- Nombre -->
+          <div class="field-simple">
+            <label class="label-simple">
+              <span class="label-icon">🏷️</span>
+              <span class="label-text">Nombre de la herramienta</span>
+              <span class="label-required">*</span>
+            </label>
+            <input id="toolName" type="text" class="input-simple" placeholder="Ej: crearCliente, buscarProducto" required>
+            <small class="help-text">Usa camelCase (sin espacios, primera letra minúscula)</small>
+          </div>
+
+          <!-- Descripción -->
+          <div class="field-simple">
+            <label class="label-simple">
+              <span class="label-icon">📝</span>
+              <span class="label-text">¿Cuándo debe usarla el AI?</span>
+              <span class="label-required">*</span>
+            </label>
+            <textarea id="toolDescription" class="textarea-simple" rows="3" placeholder="Ej: Usar cuando el usuario quiera crear un nuevo cliente o registrar a alguien" required></textarea>
+            <small class="help-text">Sé específico para que el AI sepa exactamente cuándo usarla</small>
+          </div>
+
+          <!-- URL (editable) -->
+          <div class="field-simple">
+            <label class="label-simple">
+              <span class="label-icon">🌐</span>
+              <span class="label-text">URL del endpoint</span>
+              <span class="label-required">*</span>
+            </label>
+            <input id="toolUrl" type="url" class="input-simple" placeholder="https://api.ejemplo.com/endpoint" required>
+            <small class="help-text">URL completa del endpoint (importado del cURL, puedes editarlo)</small>
+          </div>
+
+          <!-- Método (editable) -->
+          <div class="field-simple">
+            <label class="label-simple">
+              <span class="label-icon">📡</span>
+              <span class="label-text">Método HTTP</span>
+              <span class="label-required">*</span>
+            </label>
+            <select id="toolMethod" class="input-simple" required>
+              <option value="GET">GET - Obtener datos</option>
+              <option value="POST">POST - Crear/Enviar datos</option>
+              <option value="PUT">PUT - Actualizar datos</option>
+              <option value="DELETE">DELETE - Eliminar datos</option>
+            </select>
+            <small class="help-text">Método HTTP (importado del cURL, puedes cambiarlo)</small>
+          </div>
+
+          <!-- Headers (colapsable, avanzado) -->
+          <details class="advanced-section">
+            <summary class="advanced-summary">⚙️ Configuración Avanzada (opcional)</summary>
+            <div class="advanced-content">
+              <div class="field-simple">
+                <label class="label-simple">
+                  <span class="label-text">Headers HTTP</span>
+                </label>
+                <textarea id="toolHeaders" class="textarea-simple" rows="4"></textarea>
+                <small class="help-text">Autenticación y otros headers (ya importados del cURL)</small>
+              </div>
+
+              <div class="field-simple">
+                <label class="label-simple">
+                  <span class="label-text">Parámetros</span>
+                </label>
+                <textarea id="toolParameters" class="textarea-simple" rows="6"></textarea>
+                <small class="help-text">Qué información debe pedir el AI al usuario (ya importado del cURL)</small>
+              </div>
+            </div>
+          </details>
+
+          <!-- Activar -->
+          <div class="field-simple">
+            <label class="checkbox-label">
+              <input type="checkbox" id="toolEnabled" checked>
+              <span class="checkbox-text">✓ Activar herramienta inmediatamente</span>
+            </label>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn" onclick="showStep(1)">⬅️ Volver</button>
+            <button type="submit" class="btn primary btn-large">✅ Guardar Herramienta</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Paso 3: Confirmación -->
+    <div class="wizard-step" id="step3" style="display: none;">
+      <div class="step-header">
+        <span class="step-number">✓</span>
+        <h2>¡Herramienta Guardada!</h2>
+      </div>
+      <div class="step-content">
+        <div class="success-message">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <h3>Tu herramienta está lista</h3>
+          <p>El AI ya puede usarla en Energy Ring y otras interfaces.</p>
+        </div>
+        
+        <div class="step-actions">
+          <button class="btn" onclick="resetWizard()">➕ Agregar Otra Herramienta</button>
+          <a href="{{ url_for('ring') }}" class="btn primary btn-large">🎯 Ir a Energy Ring</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ejemplos Rápidos (siempre visible) -->
+  <div class="card examples-card">
+    <h3>💡 ¿No tienes un cURL? Prueba estos ejemplos:</h3>
+    <div class="examples-grid">
+      <button class="example-card" onclick="loadQuickExample('get')">
+        <div class="example-icon">🔍</div>
+        <div class="example-title">GET Simple</div>
+        <div class="example-desc">Obtener información</div>
+      </button>
+      <button class="example-card" onclick="loadQuickExample('post')">
+        <div class="example-icon">➕</div>
+        <div class="example-title">POST Crear</div>
+        <div class="example-desc">Crear registros</div>
+      </button>
+      <button class="example-card" onclick="loadQuickExample('search')">
+        <div class="example-icon">🔎</div>
+        <div class="example-title">GET Buscar</div>
+        <div class="example-desc">Buscar con filtros</div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+/* Wizard Container */
+.wizard-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.wizard-step {
+  padding: 32px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.step-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #0f172a;
+}
+
+.step-content {
+  max-width: 800px;
+}
+
+.step-help {
+  background: #f0f9ff;
+  border-left: 4px solid #3b82f6;
+  padding: 16px;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.step-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Form Fields Simplificados */
+.field-simple {
+  margin-bottom: 24px;
+}
+
+.label-simple {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.label-icon {
+  font-size: 20px;
+}
+
+.label-required {
+  color: #ef4444;
+  font-size: 18px;
+}
+
+.input-simple, .textarea-simple {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.input-simple:focus, .textarea-simple:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-readonly {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.curl-textarea {
+  width: 100%;
+  padding: 16px;
+  border: 2px dashed #3b82f6;
+  border-radius: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  min-height: 150px;
+  background: #f8fafc;
+  transition: all 0.2s;
+}
+
+.curl-textarea:focus {
+  outline: none;
+  border-style: solid;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.help-text {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.method-display {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.method-GET {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.method-POST {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.method-PUT {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.method-DELETE {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Advanced Section */
+.advanced-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.advanced-summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #64748b;
+  user-select: none;
+  padding: 8px;
+}
+
+.advanced-summary:hover {
+  color: #3b82f6;
+}
+
+.advanced-content {
+  margin-top: 16px;
+}
+
+/* Checkbox */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.checkbox-label:hover {
+  background: #e0f2fe;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.checkbox-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+/* Buttons */
+.btn-large {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.btn-mini {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.btn-success:hover {
+  background: #a7f3d0;
+}
+
+.btn-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.btn-warning:hover {
+  background: #fde68a;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
+/* Tool Items */
+.tool-item {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+}
+
+.tool-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.tool-name {
+  font-size: 16px;
+  color: #0f172a;
+  margin-right: 12px;
+}
+
+.tool-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tool-status.enabled {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.tool-status.disabled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.tool-desc {
+  margin: 8px 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tool-url {
+  display: inline-block;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.tool-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Success Message */
+.success-message {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.success-message svg {
+  margin-bottom: 24px;
+}
+
+.success-message h3 {
+  font-size: 24px;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+}
+
+.success-message p {
+  color: #64748b;
+  font-size: 16px;
+}
+
+/* Examples */
+.examples-card {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+}
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.example-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.example-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
+}
+
+.example-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.example-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.example-desc {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Import Help Box */
+.import-help-box {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 2px solid #10b981;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.import-help-box h4 {
+  margin: 0 0 16px 0;
+  color: #065f46;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-help-box ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.import-help-box li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.import-help-box code {
+  background: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.import-help-box em {
+  color: #047857;
+  font-style: normal;
+  font-size: 14px;
+}
+
+.help-note {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 16px 0;
+  border-left: 3px solid #10b981;
+}
+
+.help-note strong {
+  color: #065f46;
+}
+
+.import-help-box ul {
+  margin: 8px 0;
+  padding-left: 24px;
+  list-style: none;
+}
+
+.import-help-box ul li {
+  padding-left: 8px;
+  color: #047857;
+}
+
+.help-action {
+  background: #059669;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* System Tools Styles */
+.system-tools-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #3b82f6;
+}
+
+.system-tools-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.system-tool-item {
+  background: white;
+  border: 2px solid #3b82f6;
+}
+
+.system-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.tool-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #64748b;
+  font-family: 'Courier New', monospace;
+}
+
+.btn-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-info:hover {
+  background: #bfdbfe;
+}
+
+/* Modal para editar herramientas del sistema */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 24px;
+  color: #0f172a;
+  flex: 1;
+}
+
+.modal-close {
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #e2e8f0;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+</style>
+
+<script>
+const quickExamples = {
+  get: `curl -X GET https://api.ejemplo.com/estado`,
+  post: `curl -X POST https://api.ejemplo.com/clientes \\
+  -H 'Content-Type: application/json' \\
+  -d '{"nombre": "Juan", "email": "juan@ejemplo.com"}'`,
+  search: `curl -X GET 'https://api.ejemplo.com/clientes/buscar?query=juan'`
+};
+
+let currentConfig = {};
+
+function showStep(stepNumber) {
+  document.querySelectorAll('.wizard-step').forEach(step => {
+    step.style.display = 'none';
+  });
+  document.getElementById(`step${stepNumber}`).style.display = 'block';
+}
+
+function loadQuickExample(type) {
+  document.getElementById('curlInput').value = quickExamples[type];
+  document.getElementById('curlInput').focus();
+  showStep(1);
+}
+
+async function importCurl() {
+  const curlInput = document.getElementById('curlInput').value.trim();
+  
+  if (!curlInput) {
+    alert('❌ Por favor pega un comando cURL primero');
+    return;
+  }
+
+  try {
+    const response = await fetch('/tools/parse_curl', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ curl_command: curlInput })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      alert('❌ Error: ' + data.error);
+      return;
+    }
+
+    // Guardar configuración
+    currentConfig = data;
+
+    // Llenar formulario
+    document.getElementById('toolUrl').value = data.url || '';
+    document.getElementById('toolMethod').value = data.method || 'GET';
+    document.getElementById('toolHeaders').value = JSON.stringify(data.headers || {}, null, 2);
+    document.getElementById('toolParameters').value = JSON.stringify(data.parameters || {}, null, 2);
+
+    // Ir al paso 2
+    showStep(2);
+    
+    // Mostrar ayuda contextual
+    if (window.toolsHelper && window.toolsHelper.showImportHelp) {
+      window.toolsHelper.showImportHelp();
+    }
+    
+    document.getElementById('toolName').focus();
+
+  } catch (error) {
+    alert('❌ Error al importar: ' + error.message);
+  }
+}
+
+document.getElementById('toolForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const toolData = {
+    name: document.getElementById('toolName').value,
+    description: document.getElementById('toolDescription').value,
+    enabled: document.getElementById('toolEnabled').checked,
+    endpoint: {
+      url: document.getElementById('toolUrl').value,
+      method: document.getElementById('toolMethod').value,
+      headers: JSON.parse(document.getElementById('toolHeaders').value || '{}')
+    },
+    parameters: JSON.parse(document.getElementById('toolParameters').value || '{}')
+  };
+
+  try {
+    const formData = new FormData();
+    formData.append('name', toolData.name);
+    formData.append('description', toolData.description);
+    formData.append('enabled', toolData.enabled ? 'on' : '');
+    formData.append('endpoint', JSON.stringify(toolData.endpoint));
+    formData.append('parameters', JSON.stringify(toolData.parameters));
+
+    const response = await fetch('{{ url_for("tools_add") }}', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (response.ok) {
+      showStep(3);
+    } else {
+      alert('❌ Error al guardar la herramienta');
+    }
+  } catch (error) {
+    alert('❌ Error: ' + error.message);
+  }
+});
+
+function resetWizard() {
+  document.getElementById('curlInput').value = '';
+  document.getElementById('toolForm').reset();
+  currentConfig = {};
+  showStep(1);
+}
+
+// Inicializar
+showStep(1);
+
+// Funcionalidad para editar herramientas del sistema
+function editSystemTool(toolId, toolName, toolDescription) {
+  // Crear modal si no existe
+  let modal = document.getElementById('systemToolModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'systemToolModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="system-badge">SISTEMA</span>
+          <h3>Editar Herramienta del Sistema</h3>
+          <button class="modal-close" onclick="closeSystemToolModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <p style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid #f59e0b;">
+            ⚠️ <strong>Nota:</strong> Solo puedes editar el nombre y la descripción. El tipo y funcionalidad son parte del sistema.
+          </p>
+          <form id="systemToolForm">
+            <input type="hidden" id="systemToolId" value="">
+            <div class="field-simple">
+              <label class="label-simple">
+                <span class="label-icon">🏷️</span>
+                <span class="label-text">Nombre de la herramienta</span>
+              </label>
+              <input id="systemToolName" type="text" class="input-simple" required>
+              <small class="help-text">Usa camelCase (sin espacios, primera letra minúscula)</small>
+            </div>
+            <div class="field-simple">
+              <label class="label-simple">
+                <span class="label-icon">📝</span>
+                <span class="label-text">¿Cuándo debe usarla el AI?</span>
+              </label>
+              <textarea id="systemToolDescription" class="textarea-simple" rows="4" required></textarea>
+              <small class="help-text">Sé específico para que el AI sepa exactamente cuándo usarla</small>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeSystemToolModal()">Cancelar</button>
+          <button class="btn primary" onclick="saveSystemTool()">💾 Guardar Cambios</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  
+  // Llenar formulario
+  document.getElementById('systemToolId').value = toolId;
+  document.getElementById('systemToolName').value = toolName;
+  document.getElementById('systemToolDescription').value = toolDescription;
+  
+  // Mostrar modal
+  modal.classList.add('active');
+}
+
+function closeSystemToolModal() {
+  const modal = document.getElementById('systemToolModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+}
+
+async function saveSystemTool() {
+  const toolId = document.getElementById('systemToolId').value;
+  const toolName = document.getElementById('systemToolName').value.trim();
+  const toolDescription = document.getElementById('systemToolDescription').value.trim();
+  
+  if (!toolName || !toolDescription) {
+    alert('❌ Por favor completa todos los campos');
+    return;
+  }
+  
+  try {
+    // Leer el archivo tools.json actual
+    const response = await fetch('/api/tools');
+    const data = await response.json();
+    
+    // Actualizar la herramienta del sistema
+    const toolsData = await fetch('/data/tools.json').then(r => r.json());
+    const systemTools = toolsData.system_tools || [];
+    
+    const toolIndex = systemTools.findIndex(t => t.id === toolId);
+    if (toolIndex !== -1) {
+      systemTools[toolIndex].name = toolName;
+      systemTools[toolIndex].description = toolDescription;
+      
+      // Guardar cambios
+      const saveResponse = await fetch('/tools/edit_system/' + toolId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          name: toolName,
+          description: toolDescription
+        })
+      });
+      
+      if (saveResponse.ok) {
+        closeSystemToolModal();
+        location.reload();
+      } else {
+        alert('❌ Error al guardar los cambios');
+      }
+    }
+  } catch (error) {
+    alert('❌ Error: ' + error.message);
+  }
+}
+
+// Cerrar modal al hacer clic fuera
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('systemToolModal');
+  if (modal && e.target === modal) {
+    closeSystemToolModal();
+  }
+});
+
+async function editCustomTool(toolId) {
+  try {
+    const response = await fetch(`/tools/get/${toolId}`);
+    const tool = await response.json();
+
+    if (!tool) {
+      alert('Herramienta no encontrada');
+      return;
+    }
+
+    // Llenar el formulario del wizard
+    document.getElementById('toolName').value = tool.name;
+    document.getElementById('toolDescription').value = tool.description;
+    document.getElementById('toolUrl').value = tool.endpoint.url;
+    document.getElementById('toolMethod').value = tool.endpoint.method;
+    document.getElementById('toolHeaders').value = JSON.stringify(tool.endpoint.headers || {}, null, 2);
+    document.getElementById('toolParameters').value = JSON.stringify(tool.parameters || {}, null, 2);
+    document.getElementById('toolEnabled').checked = tool.enabled;
+
+    // Cambiar el botón de guardar para que actualice en lugar de crear
+    const submitButton = document.querySelector('#toolForm button[type="submit"]');
+    submitButton.textContent = '✅ Actualizar Herramienta';
+    
+    // Limpiar el manejador de eventos anterior y agregar uno nuevo para actualizar
+    const newButton = submitButton.cloneNode(true);
+    submitButton.parentNode.replaceChild(newButton, submitButton);
+    
+    newButton.onclick = async (e) => {
+      e.preventDefault();
+      await updateCustomTool(toolId);
+    };
+
+    showStep(2);
+    document.getElementById('toolName').focus();
+
+  } catch (error) {
+    alert('Error al cargar los datos de la herramienta: ' + error.message);
+  }
+}
+
+async function updateCustomTool(toolId) {
+  const toolData = {
+    id: toolId,
+    name: document.getElementById('toolName').value,
+    description: document.getElementById('toolDescription').value,
+    enabled: document.getElementById('toolEnabled').checked,
+    endpoint: {
+      url: document.getElementById('toolUrl').value,
+      method: document.getElementById('toolMethod').value,
+      headers: JSON.parse(document.getElementById('toolHeaders').value || '{}')
+    },
+    parameters: JSON.parse(document.getElementById('toolParameters').value || '{}')
+  };
+
+  try {
+    const response = await fetch(`/tools/edit/${toolId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(toolData)
+    });
+
+    if (response.ok) {
+      location.reload();
+    } else {
+      alert('❌ Error al actualizar la herramienta');
+    }
+  } catch (error) {
+    alert('❌ Error: ' + error.message);
+  }
+}
+
+</script>
+{% endblock %}

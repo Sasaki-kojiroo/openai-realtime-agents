@@ -1,0 +1,149 @@
+{
+  "system_tools": [
+    {
+      "id": "system_disconnect",
+      "name": "terminarLlamada",
+      "description": "Usa esta herramienta cuando el usuario se despida o la conversación haya terminado naturalmente. Ejemplos: cuando diga 'adiós', 'hasta luego', 'nos vemos', o cuando confirme que ya tiene toda la información que necesitaba.",
+      "enabled": true,
+      "system": true,
+      "type": "disconnect",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "system_open_url",
+      "name": "abrirEnlace",
+      "description": "Usa esta herramienta cuando el usuario pida abrir una página web o enlace específico. Ejemplos: 'ábreme la página de CANACO', 'abre este enlace', 'muéstrame esta URL'.",
+      "enabled": true,
+      "system": true,
+      "type": "open_url",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "La URL completa a abrir (debe incluir http:// o https://)"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "tools": [
+    {
+      "id": "fd5bfe81",
+      "name": "obtnerInfo",
+      "description": "Cuando quiera saber cosas especificas sobre CANACO como, Perosnal, Procesos, Mas benecicios Mision vision etc, siemrpe que tenga una duda probelmante la encontraras la repuesta aqui",
+      "enabled": true,
+      "endpoint": {
+        "url": "https://app-nod9.onrender.com/api/information",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer 123456789"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": "9ba5ce1d",
+      "name": "crearLead",
+      "description": "Cuando queiras poner al usuario como lead en nuestra base de datos",
+      "enabled": true,
+      "endpoint": {
+        "url": "https://app-nod9.onrender.com/api/clients",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer 123456789",
+          "Content-Type": "application/json"
+        }
+      },
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "company": {
+            "description": "Parámetro company",
+            "type": "string"
+          },
+          "name": {
+            "description": "Parámetro name",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Parámetro phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "company"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "id": "bb811272",
+      "name": "obtnerEventos",
+      "description": "Obtiente los eventos de CANACO",
+      "enabled": true,
+      "endpoint": {
+        "url": "https://app-nod9.onrender.com/api/events",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer 123456789"
+        }
+      },
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      }
+    },
+    {
+      "id": "32548046",
+      "name": "listaOfertaCumpleanos",
+      "description": "Cuando es el cumpleanos del cliente/Usuario esta herrramienta le puede decir cuales son sus ofertas",
+      "enabled": true,
+      "endpoint": {
+        "url": "https://app-nod9.onrender.com/api/birthdays",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer 123456789"
+        }
+      },
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      }
+    },
+    {
+      "id": "8d07c052",
+      "name": "costoMembresia",
+      "description": "Usuar cuando el usuario quiere conocer el costo de la membresia CANACO, te traera una tabla de precios",
+      "enabled": true,
+      "endpoint": {
+        "url": "https://app-nod9.onrender.com/api/additional/calculadora",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer 123456789"
+        }
+      },
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      }
+    }
+  ]
+}
