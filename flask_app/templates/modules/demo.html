@@ -1,0 +1,53 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Demo</h1>
+    <p class="muted">Prueba el widget de chat embebido en esta página.</p>
+  </header>
+
+  <div class="card">
+    <h2>Widget de Chat Embebido</h2>
+    <p>El widget flotante está disponible en la esquina inferior derecha de esta página. Haz clic en el botón circular para abrirlo y probar el asistente de voz.</p>
+    
+    <div style="margin-top: 24px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 2px solid #e2e8f0;">
+      <h3 style="margin-top: 0; color: #0f172a;">Características del Widget:</h3>
+      <ul style="line-height: 1.8; color: #475569;">
+        <li>🎤 <strong>Conversación por voz</strong> - Habla naturalmente con el asistente</li>
+        <li>🔄 <strong>Respuestas en tiempo real</strong> - Usando OpenAI Realtime API</li>
+        <li>🛠️ <strong>Herramientas personalizadas</strong> - El AI puede ejecutar las herramientas que configuraste</li>
+        <li>📱 <strong>Responsive</strong> - Funciona en desktop y móvil</li>
+        <li>🎨 <strong>Personalizable</strong> - Temas claro/oscuro y posición configurable</li>
+      </ul>
+    </div>
+
+    <div style="margin-top: 24px; padding: 20px; background: #f0f9ff; border-radius: 12px; border: 2px solid #3b82f6;">
+      <h3 style="margin-top: 0; color: #1e40af;">💡 Prueba estos comandos:</h3>
+      <ul style="line-height: 1.8; color: #1e40af;">
+        <li>"Hola, ¿cómo estás?"</li>
+        <li>"¿Qué herramientas tienes disponibles?"</li>
+        <li>"Abre la sección de System" (navegación interna)</li>
+        <li>"Muéstrame las herramientas" (navegación interna)</li>
+        <li>"Adiós" (desconexión automática)</li>
+      </ul>
+    </div>
+
+    <div class="actions" style="margin-top: 24px;">
+      <button class="btn primary" type="button" onclick="openWidget()">
+        🎯 Abrir Widget de Chat
+      </button>
+      <button class="btn" type="button" onclick="window.openModule('tools')">
+        🛠️ Configurar Herramientas
+      </button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 24px;">
+    <h2>Integración en tu Sitio Web</h2>
+    <p>Para integrar este widget en tu propio sitio web, simplemente añade este código:</p>
+    
+    <div id="integrationCode" style="background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.6; font-family: monospace; white-space: pre;"></div>
+
+    <button class="btn" type="button" onclick="copyIntegrationCode()" style="margin-top: 12px;">
+      📋 Copiar Código
+    </button>
+  </div>
+</section>

@@ -151,8 +151,8 @@ class ToolsHandler {
   }
 }
 
-// Crear instancia global
-window.toolsHandler = new window.toolsHandler || new ToolsHandler();
+/* Crear instancia global (evitar ReferenceError si no existe aún) */
+window.toolsHandler = window.toolsHandler || new ToolsHandler();
 
 // Exportar para uso en módulos
 if (typeof module !== 'undefined' && module.exports) {

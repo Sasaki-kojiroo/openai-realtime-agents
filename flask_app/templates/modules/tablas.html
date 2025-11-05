@@ -1,0 +1,177 @@
+<section class="page">
+  <header class="page-header">
+    <h1>📊 Tablas de Datos</h1>
+    <p class="muted">Gestiona personas y gastos con operaciones CRUD en tiempo real</p>
+  </header>
+
+  <!-- Tabla de Personas -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 style="margin: 0;">👥 Personas</h2>
+      <button class="btn primary" onclick="tablasModule.showCreatePersonaForm()">➕ Agregar Persona</button>
+    </div>
+
+    <!-- Formulario de creación (oculto por defecto) -->
+    <div id="createPersonaForm" style="display: none; background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+      <h3 style="margin-top: 0;">Nueva Persona</h3>
+      <form id="personaForm" onsubmit="tablasModule.createPersona(event)">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-weight: 600;">Nombre</label>
+            <input type="text" name="nombre" required style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-weight: 600;">Apellido</label>
+            <input type="text" name="apellido" required style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-weight: 600;">Teléfono</label>
+            <input type="text" name="telefono" required style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="submit" class="btn primary">💾 Guardar</button>
+          <button type="button" class="btn" onclick="tablasModule.hideCreatePersonaForm()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabla -->
+    <div style="overflow-x: auto;">
+      <table id="personasTable" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
+            <th style="padding: 12px; text-align: left; font-weight: 600;">ID</th>
+            <th style="padding: 12px; text-align: left; font-weight: 600;">Nombre</th>
+            <th style="padding: 12px; text-align: left; font-weight: 600;">Apellido</th>
+            <th style="padding: 12px; text-align: left; font-weight: 600;">Teléfono</th>
+            <th style="padding: 12px; text-align: center; font-weight: 600;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="personasTableBody">
+          <tr>
+            <td colspan="5" style="padding: 24px; text-align: center; color: #64748b;">
+              Cargando...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tabla de Gastos -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 style="margin: 0;">💰 Gastos</h2>
+      <button class="btn primary" onclick="tablasModule.showCreateGastoForm()">➕ Agregar Gasto</button>
+    </div>
+
+    <!-- Formulario de creación (oculto por defecto) -->
+    <div id="createGastoForm" style="display: none; background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+      <h3 style="margin-top: 0;">Nuevo Gasto</h3>
+      <form id="gastoForm" onsubmit="tablasModule.createGasto(event)">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-weight: 600;">Descripción</label>
+            <input type="text" name="descripcion" required style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-weight: 600;">Gasto ($)</label>
+            <input type="number" name="gasto" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="submit" class="btn primary">💾 Guardar</button>
+          <button type="button" class="btn" onclick="tablasModule.hideCreateGastoForm()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabla -->
+    <div style="overflow-x: auto;">
+      <table id="gastosTable" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
+            <th style="padding: 12px; text-align: left; font-weight: 600;">ID</th>
+            <th style="padding: 12px; text-align: left; font-weight: 600;">Descripción</th>
+            <th style="padding: 12px; text-align: right; font-weight: 600;">Gasto</th>
+            <th style="padding: 12px; text-align: center; font-weight: 600;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="gastosTableBody">
+          <tr>
+            <td colspan="4" style="padding: 24px; text-align: center; color: #64748b;">
+              Cargando...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Modal para editar -->
+<div id="editModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%;">
+    <h3 id="editModalTitle" style="margin-top: 0;">Editar</h3>
+    <div id="editModalContent"></div>
+    <div style="display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end;">
+      <button class="btn" onclick="tablasModule.closeEditModal()">Cancelar</button>
+      <button class="btn primary" onclick="tablasModule.saveEdit()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.btn:hover {
+  background: #e2e8f0;
+}
+
+.btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn.primary:hover {
+  background: #2563eb;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.btn-edit {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-edit:hover {
+  background: #bfdbfe;
+}
+
+.btn-delete {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-delete:hover {
+  background: #fecaca;
+}
+
+#editModal[style*="display: flex"] {
+  display: flex !important;
+}
+</style>

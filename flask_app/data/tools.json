@@ -4,7 +4,7 @@
       "id": "system_disconnect",
       "name": "terminarLlamada",
       "description": "Usa esta herramienta cuando el usuario se despida o la conversación haya terminado naturalmente. Ejemplos: cuando diga 'adiós', 'hasta luego', 'nos vemos', o cuando confirme que ya tiene toda la información que necesitaba.",
-      "enabled": true,
+      "enabled": false,
       "system": true,
       "type": "disconnect",
       "parameters": {
@@ -31,6 +31,33 @@
         },
         "required": [
           "url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "system_open_module",
+      "name": "abrirModulo",
+      "description": "Usa esta herramienta cuando el usuario quiera navegar a una sección específica de la aplicación. Ejemplos: 'abre System', 'muéstrame las herramientas', 'quiero ver el demo', 'llévame a la configuración', 'abre las tablas'. Módulos disponibles: system (configuración), tools (herramientas), demo (demostración), tablas (gestión de datos).",
+      "enabled": true,
+      "system": true,
+      "type": "open_module",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string",
+            "enum": [
+              "system",
+              "tools",
+              "demo",
+              "tablas"
+            ],
+            "description": "El nombre del módulo a abrir: 'system' para configuración, 'tools' para herramientas, 'demo' para demostración, 'tablas' para gestión de datos"
+          }
+        },
+        "required": [
+          "module"
         ],
         "additionalProperties": false
       }
@@ -143,6 +170,220 @@
         "properties": {},
         "required": [],
         "type": "object"
+      }
+    },
+    {
+      "id": "test_001",
+      "name": "listarPersonas",
+      "description": "Usa esta herramienta cuando el usuario quiera ver todas las personas registradas en el sistema. Ejemplos: 'muéstrame las personas', 'lista de personas', '¿qué personas hay?'",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/personas",
+        "method": "GET",
+        "headers": {}
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "test_002",
+      "name": "crearPersona",
+      "description": "Usa esta herramienta cuando el usuario quiera crear o agregar una nueva persona. Ejemplos: 'créame una persona', 'agrega una persona', 'registra a alguien'. Debes preguntar por nombre, apellido y teléfono si no los proporciona.",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/personas",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre de la persona"
+          },
+          "apellido": {
+            "type": "string",
+            "description": "Apellido de la persona"
+          },
+          "telefono": {
+            "type": "string",
+            "description": "Teléfono de la persona"
+          }
+        },
+        "required": ["nombre", "apellido", "telefono"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "test_003",
+      "name": "modificarPersona",
+      "description": "Usa esta herramienta cuando el usuario quiera modificar o actualizar los datos de una persona existente. Ejemplos: 'modifica a Juan', 'cambia el teléfono de María', 'actualiza los datos'. Necesitas el ID de la persona y los campos a modificar.",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/personas",
+        "method": "PUT",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID de la persona a modificar"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nuevo nombre (opcional)"
+          },
+          "apellido": {
+            "type": "string",
+            "description": "Nuevo apellido (opcional)"
+          },
+          "telefono": {
+            "type": "string",
+            "description": "Nuevo teléfono (opcional)"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "test_004",
+      "name": "borrarPersona",
+      "description": "Usa esta herramienta cuando el usuario quiera eliminar o borrar una persona. Ejemplos: 'borra a Juan', 'elimina esta persona', 'quita a María'. Necesitas el ID de la persona.",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/personas",
+        "method": "DELETE",
+        "headers": {}
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID de la persona a borrar"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "test_005",
+      "name": "listarGastos",
+      "description": "Usa esta herramienta cuando el usuario quiera ver todos los gastos registrados. Ejemplos: 'muéstrame los gastos', 'lista de gastos', '¿qué gastos hay?'",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/gastos",
+        "method": "GET",
+        "headers": {}
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "test_006",
+      "name": "crearGasto",
+      "description": "Usa esta herramienta cuando el usuario quiera agregar un nuevo gasto. Ejemplos: 'agrega un gasto', 'registra este gasto', 'créame un gasto'. Debes preguntar por descripción y monto si no los proporciona.",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/gastos",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción del gasto"
+          },
+          "gasto": {
+            "type": "number",
+            "description": "Monto del gasto en dinero"
+          }
+        },
+        "required": ["descripcion", "gasto"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "test_007",
+      "name": "modificarGasto",
+      "description": "Usa esta herramienta cuando el usuario quiera modificar o actualizar un gasto existente. Ejemplos: 'modifica el gasto de comida', 'cambia el monto', 'actualiza este gasto'. Necesitas el ID del gasto y los campos a modificar.",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/gastos",
+        "method": "PUT",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID del gasto a modificar"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Nueva descripción (opcional)"
+          },
+          "gasto": {
+            "type": "number",
+            "description": "Nuevo monto (opcional)"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "test_008",
+      "name": "borrarGasto",
+      "description": "Usa esta herramienta cuando el usuario quiera eliminar o borrar un gasto. Ejemplos: 'borra el gasto de comida', 'elimina este gasto', 'quita ese registro'. Necesitas el ID del gasto.",
+      "enabled": true,
+      "category": "Herramientas Testing",
+      "endpoint": {
+        "url": "http://127.0.0.1:5050/api/gastos",
+        "method": "DELETE",
+        "headers": {}
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID del gasto a borrar"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
       }
     }
   ]

@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "id": "1799ead2",
+      "nombre": "Socorro",
+      "apellido": "Sánchez",
+      "telefono": "6561381414"
+    },
+    {
+      "id": "b6039d4c",
+      "nombre": "Arturo",
+      "apellido": "Bermúdez",
+      "telefono": "+1 915 207 5043"
+    }
+  ]
+}

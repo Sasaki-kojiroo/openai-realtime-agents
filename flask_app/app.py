@@ -2,7 +2,8 @@ import os
 import json
 from pathlib import Path
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory, make_response
+from functools import wraps
 from dotenv import load_dotenv
 import requests
 
@@ -15,14 +16,34 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 SETTINGS_PATH = DATA_DIR / "settings.json"
 TOOLS_PATH = DATA_DIR / "tools.json"
+PERSONAS_PATH = DATA_DIR / "personas.json"
+GASTOS_PATH = DATA_DIR / "gastos.json"
 
 app = Flask(__name__, template_folder=str(TEMPLATES_DIR), static_folder=str(STATIC_DIR))
+
+# Custom CORS decorator to allow cross-origin widget embedding
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
+@app.after_request
+def after_request(response):
+    return add_cors_headers(response)
+
+@app.route('/api/<path:path>', methods=['OPTIONS'])
+@app.route('/data/<path:path>', methods=['OPTIONS'])
+@app.route('/ring', methods=['OPTIONS'])
+def handle_options(path=None):
+    response = make_response('', 204)
+    return add_cors_headers(response)
 
 DEFAULT_SETTINGS = {
     "system_prompt": "Eres un asistente útil. Responde en español con claridad y precisión.",
     "model": "gpt-4o-mini",
     "temperature": 0.6,
-    "realtime_model": "gpt-4o-realtime-preview-2025-06-03",
+    "realtime_model": "gpt-realtime-mini",
     "voice": "verse",
 }
 
@@ -75,15 +96,45 @@ def write_tools(tools_data: dict):
         json.dump(tools_data, f, ensure_ascii=False, indent=2)
 
 
+def read_collection(filepath):
+    """Lee una colección JSON (personas o gastos)"""
+    ensure_dirs()
+    if not filepath.exists():
+        default_data = {"items": []}
+        write_collection(filepath, default_data)
+        return default_data
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        default_data = {"items": []}
+        write_collection(filepath, default_data)
+        return default_data
+
+
+def write_collection(filepath, data: dict):
+    """Escribe una colección JSON"""
+    ensure_dirs()
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def gen_id():
+    """Genera un ID único corto"""
+    import uuid
+    return str(uuid.uuid4())[:8]
+
+
 @app.route("/")
 def index():
-    return redirect(url_for("chatbot"))
+    # Redirigir a la SPA
+    return render_template("spa.html")
 
 
 @app.get("/system")
 def system_get():
-    settings = read_settings()
-    return render_template("system.html", settings=settings)
+    # Redirigir a la SPA con el módulo system
+    return redirect("/#system")
 
 
 @app.post("/system")
@@ -147,10 +198,33 @@ def chatbot():
 def ui():
     return render_template("ui.html")
 
-@app.get("/ring")
-def ring():
-    # Futuristic minimalist energy ring UI (no visible buttons; click/tap anywhere to start)
-    return render_template("ring.html")
+@app.get("/modules/<module_name>")
+def get_module(module_name):
+    """
+    Devuelve el HTML parcial de un módulo para la SPA
+    """
+    # Lista blanca de módulos permitidos
+    allowed_modules = ['system', 'tools', 'demo', 'tablas']
+    
+    if module_name not in allowed_modules:
+        return jsonify({"error": "Module not found"}), 404
+    
+    try:
+        return render_template(f"modules/{module_name}.html")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.get("/demo")
+def demo():
+    # Redirigir a la SPA con el módulo demo
+    return redirect("/#demo")
+
+@app.get("/demo-all-in-one")
+def demo_all_in_one():
+    # Demo page for the all-in-one widget
+    server_url = request.host_url.rstrip("/")
+    return render_template("demo-all-in-one.html", server_url=server_url)
 
 
 @app.route('/data/<path:filename>')
@@ -465,6 +539,24 @@ def api_execute_tool():
                     "result": {"message": f"Abriendo {url}..."}
                 })
             
+            elif tool_type == "open_module":
+                module = arguments.get("module", "").strip().lower()
+                allowed_modules = ['system', 'tools', 'demo', 'tablas']
+                
+                if not module:
+                    return jsonify({"error": "module is required"}), 400
+                
+                if module not in allowed_modules:
+                    return jsonify({"error": f"Module '{module}' not found. Available: {', '.join(allowed_modules)}"}), 400
+                
+                # La navegación interna se maneja en el cliente
+                return jsonify({
+                    "success": True,
+                    "system_action": "open_module",
+                    "module": module,
+                    "result": {"message": f"Abriendo módulo {module}..."}
+                })
+            
             else:
                 return jsonify({"error": f"Unknown system tool type: {tool_type}"}), 400
         
@@ -537,6 +629,202 @@ def api_tools():
         if tool.get("enabled", False)
     ]
     return jsonify({"tools": active_tools})
+
+
+# ============================================================================
+# API CRUD: Personas
+# ============================================================================
+
+@app.get("/api/personas")
+def api_personas_list():
+    """Lista todas las personas"""
+    data = read_collection(PERSONAS_PATH)
+    return jsonify(data)
+
+
+@app.post("/api/personas")
+def api_personas_create():
+    """Crea una nueva persona"""
+    try:
+        body = request.get_json() or {}
+        nombre = body.get("nombre", "").strip()
+        apellido = body.get("apellido", "").strip()
+        telefono = body.get("telefono", "").strip()
+        
+        if not nombre or not apellido or not telefono:
+            return jsonify({"error": "nombre, apellido y telefono son requeridos"}), 400
+        
+        data = read_collection(PERSONAS_PATH)
+        new_item = {
+            "id": gen_id(),
+            "nombre": nombre,
+            "apellido": apellido,
+            "telefono": telefono
+        }
+        data["items"].append(new_item)
+        write_collection(PERSONAS_PATH, data)
+        
+        return jsonify({"created": new_item}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/personas/<item_id>", methods=["PUT"])
+@app.route("/api/personas", methods=["PUT"])
+def api_personas_update(item_id=None):
+    """Actualiza una persona existente"""
+    try:
+        body = request.get_json() or {}
+        # Obtener ID desde URL o desde body
+        if not item_id:
+            item_id = body.get("id")
+        
+        if not item_id:
+            return jsonify({"error": "ID es requerido"}), 400
+        
+        data = read_collection(PERSONAS_PATH)
+        
+        item = next((p for p in data["items"] if p["id"] == item_id), None)
+        if not item:
+            return jsonify({"error": "Persona no encontrada"}), 404
+        
+        # Actualizar campos si se proporcionan
+        if "nombre" in body:
+            item["nombre"] = body["nombre"].strip()
+        if "apellido" in body:
+            item["apellido"] = body["apellido"].strip()
+        if "telefono" in body:
+            item["telefono"] = body["telefono"].strip()
+        
+        write_collection(PERSONAS_PATH, data)
+        return jsonify({"updated": item})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/personas/<item_id>", methods=["DELETE"])
+@app.route("/api/personas", methods=["DELETE"])
+def api_personas_delete(item_id=None):
+    """Elimina una persona"""
+    try:
+        # Obtener ID desde URL o desde query params o body
+        if not item_id:
+            item_id = request.args.get("id") or (request.get_json() or {}).get("id")
+        
+        if not item_id:
+            return jsonify({"error": "ID es requerido"}), 400
+        
+        data = read_collection(PERSONAS_PATH)
+        original_count = len(data["items"])
+        data["items"] = [p for p in data["items"] if p["id"] != item_id]
+        
+        if len(data["items"]) == original_count:
+            return jsonify({"error": "Persona no encontrada"}), 404
+        
+        write_collection(PERSONAS_PATH, data)
+        return jsonify({"deleted": item_id})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# API CRUD: Gastos
+# ============================================================================
+
+@app.get("/api/gastos")
+def api_gastos_list():
+    """Lista todos los gastos"""
+    data = read_collection(GASTOS_PATH)
+    return jsonify(data)
+
+
+@app.post("/api/gastos")
+def api_gastos_create():
+    """Crea un nuevo gasto"""
+    try:
+        body = request.get_json() or {}
+        descripcion = body.get("descripcion", "").strip()
+        gasto = body.get("gasto")
+        
+        if not descripcion:
+            return jsonify({"error": "descripcion es requerida"}), 400
+        
+        try:
+            gasto = float(gasto)
+        except (TypeError, ValueError):
+            return jsonify({"error": "gasto debe ser un número válido"}), 400
+        
+        data = read_collection(GASTOS_PATH)
+        new_item = {
+            "id": gen_id(),
+            "descripcion": descripcion,
+            "gasto": gasto
+        }
+        data["items"].append(new_item)
+        write_collection(GASTOS_PATH, data)
+        
+        return jsonify({"created": new_item}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/gastos/<item_id>", methods=["PUT"])
+@app.route("/api/gastos", methods=["PUT"])
+def api_gastos_update(item_id=None):
+    """Actualiza un gasto existente"""
+    try:
+        body = request.get_json() or {}
+        # Obtener ID desde URL o desde body
+        if not item_id:
+            item_id = body.get("id")
+        
+        if not item_id:
+            return jsonify({"error": "ID es requerido"}), 400
+        
+        data = read_collection(GASTOS_PATH)
+        
+        item = next((g for g in data["items"] if g["id"] == item_id), None)
+        if not item:
+            return jsonify({"error": "Gasto no encontrado"}), 404
+        
+        # Actualizar campos si se proporcionan
+        if "descripcion" in body:
+            item["descripcion"] = body["descripcion"].strip()
+        if "gasto" in body:
+            try:
+                item["gasto"] = float(body["gasto"])
+            except (TypeError, ValueError):
+                return jsonify({"error": "gasto debe ser un número válido"}), 400
+        
+        write_collection(GASTOS_PATH, data)
+        return jsonify({"updated": item})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/gastos/<item_id>", methods=["DELETE"])
+@app.route("/api/gastos", methods=["DELETE"])
+def api_gastos_delete(item_id=None):
+    """Elimina un gasto"""
+    try:
+        # Obtener ID desde URL o desde query params o body
+        if not item_id:
+            item_id = request.args.get("id") or (request.get_json() or {}).get("id")
+        
+        if not item_id:
+            return jsonify({"error": "ID es requerido"}), 400
+        
+        data = read_collection(GASTOS_PATH)
+        original_count = len(data["items"])
+        data["items"] = [g for g in data["items"] if g["id"] != item_id]
+        
+        if len(data["items"]) == original_count:
+            return jsonify({"error": "Gasto no encontrado"}), 404
+        
+        write_collection(GASTOS_PATH, data)
+        return jsonify({"deleted": item_id})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.get("/api/session")

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Demo Ring Widget{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header with-actions">
+    <div>
+      <h1>Demo · Ring Widget</h1>
+      <p class="muted">Prueba el widget embebible del Ring y copia el snippet para usarlo en cualquier sitio.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <h3 style="margin-top:0;">Snippet de integración</h3>
+    <p class="muted">Pega esto al final del &lt;body&gt; de tu sitio donde quieras que aparezca el botón flotante:</p>
+    <pre style="white-space: pre-wrap; background:#0f172a; color:#e2e8f0; padding:16px; border-radius:12px; overflow:auto;"><code>&lt;script&gt;
+  window.RingWidgetConfig = {
+    serverUrl: "{{ server_url }}",
+    position: "bottom-right",
+    openOnLoad: false
+  };
+&lt;/script&gt;
+&lt;script async src="{{ server_url }}/static/js/ring-widget.js"&gt;&lt;/script&gt;</code></pre>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Demo en vivo</h3>
+    <p class="muted">Haz clic en el botón flotante abajo a la derecha para abrir el panel con el Ring (pide micrófono al conectar).</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Configuración para la demo local (usa este mismo servidor)
+  window.RingWidgetConfig = {
+    serverUrl: "{{ server_url }}",
+    position: "bottom-right",
+    openOnLoad: false
+  };
+</script>
+<script defer src="{{ url_for('static', filename='js/ring-widget.js') }}"></script>
+{% endblock %}

@@ -60,10 +60,15 @@
       <div class="tool-item">
         <div class="tool-main">
           <div>
-            <strong class="tool-name">{{ tool.name }}</strong>
-            <span class="tool-status {% if tool.enabled %}enabled{% else %}disabled{% endif %}">
-              {{ 'Activa ✓' if tool.enabled else 'Inactiva ✗' }}
-            </span>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <strong class="tool-name">{{ tool.name }}</strong>
+              <span class="tool-status {% if tool.enabled %}enabled{% else %}disabled{% endif %}">
+                {{ 'Activa ✓' if tool.enabled else 'Inactiva ✗' }}
+              </span>
+              {% if tool.category %}
+              <span class="category-badge">{{ tool.category }}</span>
+              {% endif %}
+            </div>
             <p class="tool-desc">{{ tool.description }}</p>
             <code class="tool-url">{{ tool.endpoint.method }} {{ tool.endpoint.url }}</code>
           </div>
@@ -235,7 +240,7 @@ curl -X POST https://api.ejemplo.com/clientes \
         
         <div class="step-actions">
           <button class="btn" onclick="resetWizard()">➕ Agregar Otra Herramienta</button>
-          <a href="{{ url_for('ring') }}" class="btn primary btn-large">🎯 Ir a Energy Ring</a>
+          <button class="btn primary btn-large" type="button" onclick="if(window.RingWidget && window.RingWidget.open) { window.RingWidget.open(); } else { alert('Widget no disponible'); }">🎯 Abrir Asistente</button>
         </div>
       </div>
     </div>
@@ -776,6 +781,17 @@ curl -X POST https://api.ejemplo.com/clientes \
   font-size: 11px;
   color: #64748b;
   font-family: 'Courier New', monospace;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .btn-info {

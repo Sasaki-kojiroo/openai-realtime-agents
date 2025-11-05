@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo - Ring Widget All-in-One</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: white;
+      border-radius: 24px;
+      padding: 48px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    p {
+      font-size: 18px;
+      color: #4a5568;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .feature {
+      padding: 24px;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      border-radius: 16px;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .feature h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .feature p {
+      font-size: 14px;
+      color: #718096;
+      margin: 0;
+    }
+    
+    .icon {
+      width: 24px;
+      height: 24px;
+      color: #667eea;
+    }
+    
+    .code-block {
+      background: #1a202c;
+      color: #e2e8f0;
+      padding: 24px;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .code-block code {
+      color: #e2e8f0;
+    }
+    
+    .highlight {
+      color: #9f7aea;
+    }
+    
+    .string {
+      color: #68d391;
+    }
+    
+    .comment {
+      color: #718096;
+      font-style: italic;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .note {
+      background: #fef5e7;
+      border-left: 4px solid #f39c12;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 24px;
+    }
+    
+    .note p {
+      margin: 0;
+      font-size: 14px;
+      color: #7d6608;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎙️ Ring Widget All-in-One</h1>
+    <p>
+      Widget de voz embebible con anillo de energía animado. Todo en un solo archivo JavaScript
+      con soporte para múltiples dominios, temas claro/oscuro y URLs configurables.
+    </p>
+    
+    <div class="features">
+      <div class="feature">
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+          </svg>
+          Todo en Uno
+        </h3>
+        <p>Un solo archivo JS con UI, estilos, animación y lógica completa</p>
+      </div>
+      
+      <div class="feature">
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          </svg>
+          Temas
+        </h3>
+        <p>Modo claro y oscuro con toggle dinámico</p>
+      </div>
+      
+      <div class="feature">
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Multi-dominio
+        </h3>
+        <p>Funciona en cualquier sitio con CORS habilitado</p>
+      </div>
+      
+      <div class="feature">
+        <h3>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          Configurable
+        </h3>
+        <p>URLs personalizables para settings y tools</p>
+      </div>
+    </div>
+    
+    <h2 style="font-size: 24px; color: #2d3748; margin-bottom: 16px;">📦 Cómo Instalar el Widget</h2>
+    
+    <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+      <p style="margin: 0; font-size: 15px; color: #1565c0; line-height: 1.6;">
+        <strong>🎓 Para principiantes:</strong> Copia y pega estos dos bloques de código en tu página HTML, 
+        justo antes de cerrar la etiqueta <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">&lt;/body&gt;</code>. 
+        El primer bloque configura el widget y el segundo lo carga.
+      </p>
+    </div>
+
+    <h3 style="font-size: 18px; color: #2d3748; margin-bottom: 12px; margin-top: 24px;">
+      1️⃣ Configuración del Widget
+    </h3>
+    <p style="font-size: 14px; color: #4a5568; margin-bottom: 16px;">
+      Este código le dice al widget cómo debe comportarse. Cada línea tiene un propósito específico:
+    </p>
+    
+    <div class="code-block">
+      <pre><code><span class="comment"><!-- PASO 1: Configurar el widget --></span>
+<span class="highlight"><script></span>
+  <span class="highlight">window.RingWidgetConfig</span> = {
+    <span class="comment">// 🌐 serverUrl: La dirección de tu servidor (OBLIGATORIO)</span>
+    <span class="comment">// Sin esto, el widget no sabe dónde conectarse</span>
+    <span class="highlight">serverUrl</span>: <span class="string">"{{ server_url }}"</span>,
+    
+    <span class="comment">// ⚙️ settingsUrl: Dónde están las configuraciones (OPCIONAL)</span>
+    <span class="comment">// Aquí se guarda la voz, idioma y personalidad del asistente</span>
+    <span class="highlight">settingsUrl</span>: <span class="string">"{{ server_url }}/data/settings.json"</span>,
+    
+    <span class="comment">// 🛠️ toolsUrl: Dónde están las herramientas (OPCIONAL)</span>
+    <span class="comment">// Define qué acciones puede hacer el asistente</span>
+    <span class="highlight">toolsUrl</span>: <span class="string">"{{ server_url }}/data/tools.json"</span>,
+    
+    <span class="comment">// 📍 position: Dónde aparece el botón flotante</span>
+    <span class="comment">// Opciones: "bottom-right" (abajo derecha) o "bottom-left" (abajo izquierda)</span>
+    <span class="highlight">position</span>: <span class="string">"bottom-right"</span>,
+    
+    <span class="comment">// 🎨 theme: Tema de colores del widget</span>
+    <span class="comment">// Opciones: "dark" (oscuro) o "light" (claro)</span>
+    <span class="highlight">theme</span>: <span class="string">"dark"</span>,
+    
+    <span class="comment">// 🚀 openOnLoad: ¿Abrir automáticamente al cargar la página?</span>
+    <span class="comment">// true = se abre solo, false = espera que el usuario haga clic</span>
+    <span class="highlight">openOnLoad</span>: <span class="highlight">false</span>
+  };
+<span class="highlight"></script></span></code></pre>
+    </div>
+
+    <h3 style="font-size: 18px; color: #2d3748; margin-bottom: 12px; margin-top: 24px;">
+      2️⃣ Cargar el Widget
+    </h3>
+    <p style="font-size: 14px; color: #4a5568; margin-bottom: 16px;">
+      Este código descarga e instala el widget en tu página:
+    </p>
+
+    <div class="code-block">
+      <pre><code><span class="comment"><!-- PASO 2: Cargar el archivo del widget --></span>
+<span class="comment"><!-- "async" significa que se carga en segundo plano sin bloquear tu página --></span>
+<span class="highlight"><script</span> <span class="highlight">async</span> <span class="highlight">src</span>=<span class="string">"{{ server_url }}/static/js/ring-all-in-one.js"</span><span class="highlight">></script></span></code></pre>
+    </div>
+
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; border-radius: 8px; margin-top: 24px; margin-bottom: 24px;">
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #856404; line-height: 1.6;">
+        <strong>⚠️ Importante sobre serverUrl:</strong>
+      </p>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #856404; line-height: 1.8;">
+        <li><strong>Es OBLIGATORIO:</strong> Sin esta dirección, el widget no funcionará</li>
+        <li><strong>Debe ser exacta:</strong> Incluye http:// o https:// al inicio</li>
+        <li><strong>Sin barra final:</strong> Usa "http://localhost:5050" NO "http://localhost:5050/"</li>
+        <li><strong>Ejemplo local:</strong> "http://localhost:5050" (para desarrollo)</li>
+        <li><strong>Ejemplo producción:</strong> "https://tu-dominio.com" (para tu sitio web)</li>
+      </ul>
+    </div>
+    
+    <button class="btn" onclick="window.RingWidget && window.RingWidget.open()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 16v-4M12 8h.01"></path>
+      </svg>
+      Abrir Widget
+    </button>
+    
+    <div class="note">
+      <p>
+        <strong>💡 Nota:</strong> El botón flotante aparecerá en la esquina inferior derecha.
+        Haz clic en él para abrir el asistente de voz. Usa el botón de sol/luna para cambiar entre tema claro y oscuro.
+      </p>
+    </div>
+  </div>
+
+  <!-- Configuración del widget -->
+  <script>
+    window.RingWidgetConfig = {
+      serverUrl: "{{ server_url }}",
+      settingsUrl: "{{ server_url }}/data/settings.json",
+      toolsUrl: "{{ server_url }}/data/tools.json",
+      position: "bottom-right",
+      theme: "dark",
+      openOnLoad: false
+    };
+  </script>
+  
+  <!-- Cargar el widget -->
+  <script async src="{{ server_url }}/static/js/ring-all-in-one.js"></script>
+</body>
+</html>

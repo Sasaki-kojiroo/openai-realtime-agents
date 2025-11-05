@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "id": "68329fde",
+      "descripcion": "comida de perros",
+      "gasto": 500.0
+    },
+    {
+      "id": "772aded1",
+      "descripcion": "jabón para la casa",
+      "gasto": 300.0
+    }
+  ]
+}

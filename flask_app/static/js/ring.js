@@ -24,6 +24,7 @@
   const micStatus = document.getElementById("micStatus");
   const assistantStatus = document.getElementById("assistantStatus");
   const micStatusItem = micStatus ? micStatus.closest(".info-item") : null;
+  const messagesContainer = document.getElementById("messagesContainer");
   const ctx = canvas.getContext("2d");
 
   // WebRTC/Audio
@@ -49,9 +50,59 @@
   let prevRadius = 0;
   let prevRingWidth = 0;
 
+  // Messages state
+  let currentUserTranscript = "";
+  let currentAssistantTranscript = "";
+  let isAssistantResponding = false;
+
   // Smoothed levels
   let micLevel = 0;
   let aiLevel = 0;
+
+  // Helper function to add message to panel
+  function addMessage(role, text) {
+    if (!text || !text.trim()) return;
+    
+    // Remove empty state if present
+    const emptyState = messagesContainer.querySelector('.messages-empty');
+    if (emptyState) {
+      emptyState.remove();
+    }
+
+    const messageItem = document.createElement('div');
+    messageItem.className = `message-item ${role}`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = text.trim();
+    
+    const timestamp = document.createElement('div');
+    timestamp.className = 'message-timestamp';
+    const now = new Date();
+    timestamp.textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    
+    messageItem.appendChild(bubble);
+    messageItem.appendChild(timestamp);
+    messagesContainer.appendChild(messageItem);
+    
+    // Auto-scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // Helper function to update last message
+  function updateLastMessage(role, text) {
+    if (!text) return;
+    
+    const messages = messagesContainer.querySelectorAll(`.message-item.${role}`);
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      const bubble = lastMessage.querySelector('.message-bubble');
+      if (bubble) {
+        bubble.textContent = text.trim();
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
+  }
 
   // UI State Management
   function updateStatus(status, message = "") {
@@ -195,6 +246,21 @@
     isAssistantSpeaking = false;
     micLevel = 0;
     aiLevel = 0;
+    
+    // Reset messages state
+    currentUserTranscript = "";
+    currentAssistantTranscript = "";
+    isAssistantResponding = false;
+    
+    // Clear messages panel
+    messagesContainer.innerHTML = `
+      <div class="messages-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <p>Los mensajes aparecerán aquí</p>
+      </div>
+    `;
     
     if (ringInfo) ringInfo.style.display = "flex";
     updateStatus("disconnected");
@@ -352,6 +418,39 @@
       try {
         const ev = JSON.parse(e.data);
         const t = ev.type || "";
+
+        // Capturar transcripciones del usuario
+        if (t === "conversation.item.input_audio_transcription.completed") {
+          const transcript = ev.transcript || "";
+          if (transcript.trim()) {
+            currentUserTranscript = transcript;
+            addMessage('user', transcript);
+          }
+          return;
+        }
+
+        // Capturar transcripciones del asistente (deltas)
+        if (t === "response.audio_transcript.delta") {
+          const delta = ev.delta || "";
+          currentAssistantTranscript += delta;
+          
+          if (!isAssistantResponding) {
+            isAssistantResponding = true;
+            addMessage('assistant', currentAssistantTranscript);
+          } else {
+            updateLastMessage('assistant', currentAssistantTranscript);
+          }
+          return;
+        }
+
+        // Cuando el asistente termina de responder
+        if (t === "response.audio_transcript.done" || t === "response.done") {
+          if (currentAssistantTranscript.trim()) {
+            updateLastMessage('assistant', currentAssistantTranscript);
+          }
+          currentAssistantTranscript = "";
+          isAssistantResponding = false;
+        }
 
         // Manejar function calls
         if (t === "response.function_call_arguments.done") {
